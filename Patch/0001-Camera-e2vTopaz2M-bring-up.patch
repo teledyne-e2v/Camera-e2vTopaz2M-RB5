@@ -1,0 +1,1477 @@
+From 0c4c874c90d57c222a372d8dbd664eb890325ba7 Mon Sep 17 00:00:00 2001
+From: liangsk1204 <liangsk1204@thundersoft.com>
+Date: Thu, 20 Jun 2024 11:41:41 +0800
+Subject: [PATCH] Camera: e2vTopaz2M bring up
+
+camera sensor bring up e2vTopaz2M
+
+Change-Id: Ie122fe5ea07447e9ffa660da4bc950b9759362f7
+---
+ .../kona-camera-sensor-rb5.dtsi               |    2 +-
+ .../proprietary/chi-cdk/configs/product.mk    |    1 +
+ .../core/build/linuxembedded/CMakeLists.txt   |    1 +
+ .../qcom/proprietary/chi-cdk/oem/Android.mk   |    1 +
+ .../oem/qcom/module/e2vTopaz2M_module.xml     |   65 ++
+ .../e2vTopaz2M/build/android/Android.mk       |   43 +
+ .../build/linuxembedded/CMakeLists.txt        |   38 +
+ .../sensor/e2vTopaz2M/e2vTopaz2M_sensor.cpp   |  205 ++++
+ .../sensor/e2vTopaz2M/e2vTopaz2M_sensor.xml   | 1005 +++++++++++++++++
+ .../tools/buildbins/buildbins_kona.yaml       |    4 +
+ 10 files changed, 1364 insertions(+), 1 deletion(-)
+ create mode 100755 apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/module/e2vTopaz2M_module.xml
+ create mode 100755 apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/android/Android.mk
+ create mode 100755 apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/linuxembedded/CMakeLists.txt
+ create mode 100755 apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.cpp
+ create mode 100755 apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.xml
+
+diff --git a/apps_proc/src/vendor/qcom/proprietary/camera-devicetree/kona-camera-sensor-rb5.dtsi b/apps_proc/src/vendor/qcom/proprietary/camera-devicetree/kona-camera-sensor-rb5.dtsi
+index 9f52d4e2..cea52380 100755
+--- a/apps_proc/src/vendor/qcom/proprietary/camera-devicetree/kona-camera-sensor-rb5.dtsi
++++ b/apps_proc/src/vendor/qcom/proprietary/camera-devicetree/kona-camera-sensor-rb5.dtsi
+@@ -545,7 +545,7 @@
+ 		cell-index = <3>;
+ 		compatible = "qcom,cam-sensor";
+ 		csiphy-sd-index = <3>;
+-		eeprom-src = <&eeprom_tof>;
++		//eeprom-src = <&eeprom_tof>;
+ 		sensor-position-roll = <90>;
+ 		sensor-position-pitch = <0>;
+ 		sensor-position-yaw = <180>;
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/configs/product.mk b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/configs/product.mk
+index 485d66d6..7fd17d0b 100755
+--- a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/configs/product.mk
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/configs/product.mk
+@@ -123,6 +123,7 @@ PRODUCT_PACKAGES += com.qti.sensormodule.lce_s5k3p9.bin
+ PRODUCT_PACKAGES += com.qti.sensormodule.amtran_lt6911uxc.bin
+ PRODUCT_PACKAGES += com.qti.sensormodule.tsprecision_s5kgd2sp03.bin
+ PRODUCT_PACKAGES += com.qti.sensormodule.sunny_imx989.bin
++PRODUCT_PACKAGES += com.qti.sensormodule.e2vTopaz2M.bin
+ PRODUCT_PACKAGES += com.qti.tuned.default.bin
+ PRODUCT_PACKAGES += com.qti.tuned.liteon_imx362.bin
+ PRODUCT_PACKAGES += com.qti.tuned.sunny_s5k5e9yu05.bin
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/core/build/linuxembedded/CMakeLists.txt b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/core/build/linuxembedded/CMakeLists.txt
+index 526ceea6..136403f4 100755
+--- a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/core/build/linuxembedded/CMakeLists.txt
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/core/build/linuxembedded/CMakeLists.txt
+@@ -116,4 +116,5 @@ add_subdirectory (${CAMX_CHICDK_OEM_PATH}/qcom/sensor/mn34906/build/linuxembedde
+ add_subdirectory (${CAMX_CHICDK_OEM_PATH}/qcom/sensor/mn34906_depth/build/linuxembedded ${CAMX_OUT_PATH}/sensor/mn34906_depth)
+ add_subdirectory (${CAMX_CHICDK_OEM_PATH}/qcom/sensor/max9296a_ar0231/build/linuxembedded ${CAMX_OUT_PATH}/sensor/max9296a_ar0231)
+ add_subdirectory (${CAMX_CHICDK_OEM_PATH}/qcom/sensor/lt6911uxc/build/linuxembedded ${CAMX_OUT_PATH}/sensor/lt6911uxc)
++add_subdirectory (${CAMX_CHICDK_OEM_PATH}/qcom/sensor/e2vTopaz2M/build/linuxembedded ${CAMX_OUT_PATH}/sensor/e2vTopaz2M)
+ add_subdirectory (${CAMX_CHICDK_TEST_PATH}/camx-hal3-test ${CAMX_OUT_PATH}/test/camx-hal3-test)
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/Android.mk b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/Android.mk
+index 7e6b82d8..c87b6f18 100755
+--- a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/Android.mk
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/Android.mk
+@@ -85,6 +85,7 @@ include $(CAMX_CHICDK_OEM_PATH)/qcom/sensor/s5k3m5/build/android/Android.mk
+ include $(CAMX_CHICDK_OEM_PATH)/qcom/sensor/s5k3p9/build/android/Android.mk
+ include $(CAMX_CHICDK_OEM_PATH)/qcom/sensor/lt6911uxc/build/android/Android.mk
+ include $(CAMX_CHICDK_OEM_PATH)/qcom/sensor/s5kgd2sp03/build/android/Android.mk
++include $(CAMX_CHICDK_OEM_PATH)/qcom/sensor/e2vTopaz2M/build/android/Android.mk
+ ifeq ($(TARGET_BOARD_PLATFORM),kona)
+ include $(CAMX_CHICDK_OEM_PATH)/qcom/sensor/imx563/build/android/Android.mk
+ endif
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/module/e2vTopaz2M_module.xml b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/module/e2vTopaz2M_module.xml
+new file mode 100755
+index 00000000..56af2090
+--- /dev/null
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/module/e2vTopaz2M_module.xml
+@@ -0,0 +1,65 @@
++<?xml version="1.0" encoding="utf-8" ?>
++<!--========================================================================-->
++<!-- Copyright (c) 2017-2018,2020 Qualcomm Technologies, Inc.                    -->
++<!-- All Rights Reserved.                                                   -->
++<!-- Confidential and Proprietary - Qualcomm Technologies, Inc.             -->
++<!--========================================================================-->
++<cameraModuleData
++  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++  xsi:noNamespaceSchemaLocation="..\..\..\api\sensor\camxmoduleconfig.xsd">
++  <module_version major_revision="1" minor_revision="0" incr_revision="0"/>
++
++    <!--Module group can contain either 1 module or 2 modules
++      Dual camera, stereo camera use cases contain 2 modules in the group -->
++  <moduleGroup>
++    <!--Module configuration -->
++    <moduleConfiguration description="Module configuration">
++      <!--CameraId is the id to which DTSI node is mapped.
++          Typically CameraId is the slot Id for non combo mode. -->
++      <cameraId>3</cameraId>
++      <!--Name of the module integrator -->
++      <moduleName>e2v</moduleName>
++      <!--Name of the sensor in the image sensor module -->
++      <sensorName>e2vTopaz2M</sensorName>
++      <!--Actuator name in the image sensor module
++          This is an optional element. Skip this element if actuator is not present -->
++      <actuatorName></actuatorName>
++      <oisName></oisName>
++      <!--EEPROM name in the image sensor module
++          This is an optional element. Skip this element if EEPROM is not present -->
++      <eepromName></eepromName>
++      <flashName></flashName>
++      <chromatixName></chromatixName>
++      <!--Position of the sensor module.
++          Valid values are: REAR, FRONT, REAR_AUX, FRONT_AUX, EXTERNAL -->
++      <position>FRONT</position>
++      <!--CSI Information -->
++      <CSIInfo description="CSI Information">
++          <laneAssign>0x10</laneAssign>
++          <isComboMode>0</isComboMode>
++      </CSIInfo>
++      <!--Lens information -->
++      <lensInfo description="Lens Information">
++        <!--Focal length of the lens in millimeters. -->
++        <focalLength>2.22</focalLength>
++        <!--F-Number of the optical system. -->
++        <fNumber>2.4</fNumber>
++        <!--Minimum focus distance in meters. -->
++        <minFocusDistance>0.1</minFocusDistance>
++        <!--Total focus distance in meters. -->
++        <maxFocusDistance>1.0</maxFocusDistance>
++        <!--Horizontal view angle in degrees. -->
++        <horizontalViewAngle>120</horizontalViewAngle>
++        <!--Vertical view angle in degrees. -->
++        <verticalViewAngle>75</verticalViewAngle>
++        <!--Maximum Roll Degree. Valid values are: 0, 90, 180, 270, 360 -->
++        <maxRollDegree>360</maxRollDegree>
++        <!--Maximum Pitch Degree. Valid values are: 0 to 359 -->
++        <maxPitchDegree>360</maxPitchDegree>
++        <!--Maximum Yaw Degree. Valid values are: 0 to 359 -->
++        <maxYawDegree>360</maxYawDegree>
++      </lensInfo>
++      <pdafName></pdafName>
++    </moduleConfiguration>
++  </moduleGroup>
++</cameraModuleData>
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/android/Android.mk b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/android/Android.mk
+new file mode 100755
+index 00000000..10a0594a
+--- /dev/null
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/android/Android.mk
+@@ -0,0 +1,43 @@
++ifeq ($(CAMX_CHICDK_PATH),)
++LOCAL_PATH := $(abspath $(call my-dir)/../..)
++CAMX_CHICDK_PATH := $(abspath $(LOCAL_PATH)/../../../..)
++else
++LOCAL_PATH := $(CAMX_CHICDK_PATH)/oem/qcom/sensor/e2vTopaz2M
++endif
++
++include $(CLEAR_VARS)
++
++# Module supports function call tracing via ENABLE_FUNCTION_CALL_TRACE
++# Required before including common.mk
++SUPPORT_FUNCTION_CALL_TRACE := 1
++
++# Get definitions common to the CAMX project here
++include $(CAMX_CHICDK_PATH)/core/build/android/common.mk
++
++LOCAL_SRC_FILES :=                   \
++    e2vTopaz2M_sensor.cpp
++
++LOCAL_INC_FILES :=                   \
++
++
++# Put here any libraries that should be linked by CAMX projects
++LOCAL_C_LIBS := $(CAMX_C_LIBS)
++
++# Paths to included headers
++LOCAL_C_INCLUDES := $(CAMX_C_INCLUDES)
++
++LOCAL_C_INCLUDES +=                 \
++    $(CAMX_CHICDK_API_PATH)/sensor
++
++# Compiler flags
++LOCAL_CFLAGS := $(CAMX_CFLAGS)
++LOCAL_CPPFLAGS := $(CAMX_CPPFLAGS)
++
++# Library name
++LOCAL_MODULE := com.qti.sensor.e2vTopaz2M
++
++# Deployment path
++LOCAL_MODULE_RELATIVE_PATH := camera
++
++include $(BUILD_SHARED_LIBRARY)
++-include $(CAMX_CHECK_WHINER)
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/linuxembedded/CMakeLists.txt b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/linuxembedded/CMakeLists.txt
+new file mode 100755
+index 00000000..4ac3c5ae
+--- /dev/null
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/build/linuxembedded/CMakeLists.txt
+@@ -0,0 +1,38 @@
++# User Variables
++set (SUPPORT_FUNCTION_CALL_TRACE 1)
++
++# NO DATA FOR SECTION: Custom additions (begin)
++
++# Common Include
++include (${CAMX_CHICDK_API_PATH}/../core/build/linuxembedded/common.cmake)
++
++# Files and Build Type
++add_library( com.qti.sensor.e2vTopaz2M SHARED
++    ../../e2vTopaz2M_sensor.cpp
++)
++
++# Libraries to compile
++target_link_libraries (com.qti.sensor.e2vTopaz2M dl)
++
++# Include Paths
++include_directories (${CAMX_C_INCLUDES})
++include_directories (../..)
++include_directories (${CAMX_CHICDK_API_PATH}/sensor)
++
++# Dependencies
++
++
++# Definitions
++add_definitions (${CAMX_CFLAGS})
++add_definitions (${CAMX_CPPFLAGS})
++# NO DATA FOR SECTION: Custom additions (end)
++
++# Auto-Gen
++#add_dependencies(com.qti.sensor.e2vTopaz2M autogen)
++
++install(TARGETS com.qti.sensor.e2vTopaz2M LIBRARY DESTINATION lib/camera)
++
++if (CONFIG STREQUAL "Debug")
++    add_definitions( -g )
++endif()
++
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.cpp b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.cpp
+new file mode 100755
+index 00000000..45b83036
+--- /dev/null
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.cpp
+@@ -0,0 +1,205 @@
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++// Copyright (c) 2018,2020-2021 Qualcomm Technologies, Inc.
++// All Rights Reserved.
++// Confidential and Proprietary - Qualcomm Technologies, Inc.
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++
++#include "camxsensordriverapi.h"
++// NOWHINE ENTIRE FILE
++#include <android/log.h>
++#ifdef __cplusplus
++extern "C"
++{
++#endif // __cplusplus
++
++#define LEUZE_E2VTOPAZ2M_DBG(fmt, args...) __android_log_print(ANDROID_LOG_INFO, "Teledyne e2V Topaz 2M",fmt, ##args)
++
++static const UINT   E2VTOPAZ2MMinRegisterGain        = 0;                                     ///< Minimum analog register gain
++static const UINT   E2VTOPAZ2MMaxRegisterGain        = 978;                                   ///< Maximum analog register gain
++static const DOUBLE E2VTOPAZ2MMinRealGain            = (1024.0f / (1024.0f - E2VTOPAZ2MMinRegisterGain));    ///< Minimum analog real gain (1X)
++static const DOUBLE E2VTOPAZ2MMaxRealGain            = (1024.0f / (1024.0f - E2VTOPAZ2MMaxRegisterGain));    ///< Maximum analog real gain (16X)
++
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++// RegisterToRealGain
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++static DOUBLE RegisterToRealGain(
++    UINT registerGain)
++{
++
++    if(E2VTOPAZ2MMaxRegisterGain < registerGain)
++    {
++        registerGain = E2VTOPAZ2MMaxRegisterGain;
++    }
++
++    return (1024.0f / (1024.0f - registerGain));
++}
++
++
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++// RealToRegisterGain
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++static UINT RealToRegisterGain(
++    DOUBLE realGain)
++{
++    UINT32 regGain = 0;
++
++    if (realGain < 1.0)
++    {
++        realGain = 1.0;
++    }
++    else if (realGain > E2VTOPAZ2MMaxRealGain)
++    {
++        realGain = E2VTOPAZ2MMaxRealGain;
++    }
++
++    regGain = static_cast<UINT32>(1024.0 - (1024.0 / realGain));
++    return regGain;
++}
++
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++// CalculateExposure
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++BOOL CalculateExposure(
++    SensorExposureInfo*          pExposureInfo,
++    SensorCalculateExposureData* pCalculateExposureData)
++{
++    if (NULL == pExposureInfo || NULL == pCalculateExposureData)
++    {
++        return FALSE;
++    }
++
++    pExposureInfo->analogRegisterGain   = RealToRegisterGain(pCalculateExposureData->realGain);
++    pExposureInfo->analogRealGain       = static_cast<FLOAT>(RegisterToRealGain(pExposureInfo->analogRegisterGain));
++    pExposureInfo->digitalRegisterGain  = 1;
++    pExposureInfo->digitalRealGain      = 1;
++    pExposureInfo->ISPDigitalGain       =
++        pCalculateExposureData->realGain /(pExposureInfo->analogRealGain * pExposureInfo->digitalRealGain);
++    pExposureInfo->lineCount            = pCalculateExposureData->lineCount;
++    pExposureInfo->shortRegisterGain    = RealToRegisterGain(pCalculateExposureData->shortRealGain);
++    pExposureInfo->shortLinecount       = pCalculateExposureData->shortLinecount;
++    //dump exposure info
++    LEUZE_E2VTOPAZ2M_DBG("E2VTOPAZ2M exposure info: analogRegisterGain %d, analogRealGain %f, digitalRegisterGain %d, digitalRealGain %f, ISPDigitalGain %f, lineCount %d, shortRegisterGain %d, shortLinecount %d",
++        pExposureInfo->analogRegisterGain, pExposureInfo->analogRealGain, pExposureInfo->digitalRegisterGain, pExposureInfo->digitalRealGain,
++        pExposureInfo->ISPDigitalGain, pExposureInfo->lineCount, pExposureInfo->shortRegisterGain, pExposureInfo->shortLinecount);
++
++    return TRUE;
++}
++
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++// FillExposureSettings
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++BOOL FillExposureSettings(
++    RegSettingsInfo*        pRegSettingsInfo,
++    SensorFillExposureData* pExposureData)
++{
++    UINT32  index     = 0;
++    UINT16  regCount  = 0;
++
++    if ((NULL == pRegSettingsInfo) || (NULL == pExposureData))
++    {
++        return FALSE;
++    }
++
++#if 0
++    // print groupHoldOnSettings regSettingCount
++    LEUZE_E2VTOPAZ2M_DBG("E2VTOPAZ2M exposure info: groupHoldOnSettings regSettingCount %d", pExposureData->pRegInfo->groupHoldOnSettings.regSettingCount);
++
++    for (index = 0; index < pExposureData->pRegInfo->groupHoldOnSettings.regSettingCount; index++)
++    {
++        pRegSettingsInfo->regSetting[regCount].registerAddr =
++            pExposureData->pRegInfo->groupHoldOnSettings.regSetting[index].registerAddr;
++        pRegSettingsInfo->regSetting[regCount].registerData =
++            pExposureData->pRegInfo->groupHoldOnSettings.regSetting[index].registerData;
++        pRegSettingsInfo->regSetting[regCount].regAddrType  =
++            I2CRegAddressDataTypeByte;
++        pRegSettingsInfo->regSetting[regCount].regDataType  =
++            I2CRegAddressDataTypeWord;
++        pRegSettingsInfo->regSetting[regCount].delayUs      =
++            pExposureData->pRegInfo->groupHoldOnSettings.regSetting[index].delayUs;
++        regCount++;
++    }
++#endif
++
++#if 0
++    pRegSettingsInfo->regSetting[regCount].registerAddr  = pExposureData->pRegInfo->frameLengthLinesAddr;
++    pRegSettingsInfo->regSetting[regCount].registerData  = pExposureData->frameLengthLines;
++    regCount++;
++#endif
++
++#if 1
++    // set exposure time
++    pRegSettingsInfo->regSetting[regCount].registerAddr  = pExposureData->pRegInfo->coarseIntgTimeAddr;
++
++    if (pExposureData->lineCount > 0x4c0)
++    {
++        pExposureData->lineCount = 0x4c0;
++        LEUZE_E2VTOPAZ2M_DBG("debugadd limit the exp time less than 16ms.");
++    }
++    pRegSettingsInfo->regSetting[regCount].registerData  = pExposureData->lineCount;
++    pRegSettingsInfo->regSetting[regCount].regAddrType  =
++        I2CRegAddressDataTypeByte;
++    pRegSettingsInfo->regSetting[regCount].regDataType=
++        I2CRegAddressDataTypeWord;
++    regCount++;
++    LEUZE_E2VTOPAZ2M_DBG("E2VTOPAZ2M exposure info: addr: 0x%x, data: 0x%x", pExposureData->pRegInfo->coarseIntgTimeAddr, pExposureData->lineCount);
++
++#endif
++#if 0
++    pRegSettingsInfo->regSetting[regCount].registerAddr  = pExposureData->pRegInfo->globalAnalogGainAddr;
++    pRegSettingsInfo->regSetting[regCount].registerData  = pExposureData->analogRegisterGain;
++    regCount++;
++
++    pRegSettingsInfo->regSetting[regCount].registerAddr  = pExposureData->pRegInfo->GlobalDigitalGainAddr;
++    pRegSettingsInfo->regSetting[regCount].registerData  = pExposureData->digitalRegisterGain;
++    regCount++;
++#endif
++
++#if 0
++    // print groupHoldOffSettings regSettingCount
++    for (index = 0; index < pExposureData->pRegInfo->groupHoldOffSettings.regSettingCount; index++)
++    {
++        pRegSettingsInfo->regSetting[regCount].registerAddr  =
++            pExposureData->pRegInfo->groupHoldOffSettings.regSetting[index].registerAddr;
++        pRegSettingsInfo->regSetting[regCount].registerData  =
++            pExposureData->pRegInfo->groupHoldOffSettings.regSetting[index].registerData;
++        pRegSettingsInfo->regSetting[regCount].regAddrType  =
++            I2CRegAddressDataTypeByte;
++        pRegSettingsInfo->regSetting[regCount].regDataType=
++            I2CRegAddressDataTypeWord;
++        regCount++;
++    }
++#endif
++
++    pRegSettingsInfo->regSettingCount = regCount;
++    // dump reg settings
++    for (index = 0; index < pRegSettingsInfo->regSettingCount; index++)
++    {
++        LEUZE_E2VTOPAZ2M_DBG("E2VTOPAZ2M exposure info: regSetting[%d] addr: 0x%x, data: 0x%x, addr_type:%d, data_type:%d", index, pRegSettingsInfo->regSetting[index].registerAddr, pRegSettingsInfo->regSetting[index].registerData, 
++        pRegSettingsInfo->regSetting[index].regAddrType, pRegSettingsInfo->regSetting[index].regDataType);
++    }
++
++    if (MAX_REG_SETTINGS <= regCount)
++    {
++        return FALSE;
++    }
++    else
++    {
++        return TRUE;
++    }
++}
++
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++// GetSensorLibraryAPIs
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++VOID GetSensorLibraryAPIs(
++    SensorLibraryAPI* pSensorLibraryAPI)
++{
++    pSensorLibraryAPI->majorVersion          = 1;
++    pSensorLibraryAPI->minorVersion          = 0;
++    pSensorLibraryAPI->pCalculateExposure    = CalculateExposure;
++    pSensorLibraryAPI->pFillExposureSettings = FillExposureSettings;
++}
++
++#ifdef __cplusplus
++} // CamX Namespace
++#endif // __cplusplus
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.xml b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.xml
+new file mode 100755
+index 00000000..b21c66d1
+--- /dev/null
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/oem/qcom/sensor/e2vTopaz2M/e2vTopaz2M_sensor.xml
+@@ -0,0 +1,1005 @@
++<?xml version="1.0" encoding="utf-8" ?>
++<!--========================================================================-->
++<!-- Copyright (c) 2017-2020 Qualcomm Technologies, Inc.                    -->
++<!-- All Rights Reserved.                                                   -->
++<!-- Confidential and Proprietary - Qualcomm Technologies, Inc.             -->
++<!--========================================================================-->
++<sensorDriverData
++  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++  xsi:noNamespaceSchemaLocation="../../../../api/sensor/camxsensordriver.xsd">
++  <module_version major_revision="1" minor_revision="0" incr_revision="0"/>
++  
++  <!--Sensor slave information -->
++  <slaveInfo>
++    <!--Name of the sensor -->
++    <sensorName>e2vTopaz2M</sensorName>
++    <!--8-bit or 10-bit write slave address -->
++    <slaveAddress>0x20</slaveAddress>
++    <!--Register address / data size in bytes -->
++    <regAddrType range="[1,4]">1</regAddrType>
++    <!--Register address / data size in bytes -->
++    <regDataType range="[1,4]">2</regDataType>
++    <!--Register address for sensor Id -->
++    <sensorIdRegAddr>0x7F</sensorIdRegAddr>
++    <!--Sensor Id -->
++    <sensorId>0x8016</sensorId>
++    <!--Mask for sensor id. Sensor Id may only be few bits -->
++    <sensorIdMask>0xFFFF</sensorIdMask>
++    <!--I2C frequency mode of slave
++        Supported modes are: STANDARD (100 KHz), FAST (400 KHz), FAST_PLUS (1 MHz), CUSTOM (Custom frequency in DTSI) -->
++    <i2cFrequencyMode>FAST</i2cFrequencyMode>
++    <!--Sequence of power configuration type and configuration value required to control power to the device -->
++    <powerUpSequence>
++      <!--Power setting configuration
++          Contains: configType, configValue and delay in milli seconds -->
++      <powerSetting>
++        <!--Power configuration type
++            Supported types are: MCLK, VANA, VDIG, VIO, VAF, RESET, STANDBY -->
++        <configType>VIO</configType>
++        <!--Configuration value for the type of configuration -->
++        <configValue>1</configValue>
++        <!--Delay in milli seconds -->
++        <delayMs>1</delayMs>
++      </powerSetting>
++      <powerSetting>
++        <!--Power configuration type
++            Supported types are: MCLK, VANA, VDIG, VIO, VAF, RESET, STANDBY -->
++        <configType>RESET</configType>
++        <!--Configuration value for the type of configuration -->
++        <configValue>0</configValue>
++        <!--Delay in milli seconds -->
++        <delayMs>3</delayMs>
++      </powerSetting>
++      <!--Power setting configuration
++          Contains: configType, configValue and delay in milli seconds -->
++      <powerSetting>
++        <!--Power configuration type
++            Supported types are: MCLK, VANA, VDIG, VIO, VAF, RESET, STANDBY -->
++        <configType>RESET</configType>
++        <!--Configuration value for the type of configuration -->
++        <configValue>1</configValue>
++        <!--Delay in milli seconds -->
++        <delayMs>5</delayMs>
++      </powerSetting>
++      <powerSetting>
++        <!--Power configuration type
++            Supported types are: MCLK, VANA, VDIG, VIO, VAF, RESET, STANDBY -->
++        <configType>MCLK</configType>
++        <!--Configuration value for the type of configuration -->
++        <configValue>24000000</configValue>
++        <!--Delay in milli seconds -->
++        <delayMs>5</delayMs>
++      </powerSetting>
++    </powerUpSequence>
++    <!--Sequence of power configuration type and configuration value required to control power to the device -->
++    <powerDownSequence>
++      <!--Power setting configuration
++          Contains: configType, configValue and delay in milli seconds -->
++      <powerSetting>
++        <!--Power configuration type
++            Supported types are: MCLK, VANA, VDIG, VIO, VAF, RESET, STANDBY -->
++        <configType>MCLK</configType>
++        <!--Configuration value for the type of configuration -->
++        <configValue>0</configValue>
++        <!--Delay in milli seconds -->
++        <delayMs>1</delayMs>
++      </powerSetting>
++      <!--Power setting configuration
++          Contains: configType, configValue and delay in milli seconds -->
++      <powerSetting>
++        <!--Power configuration type
++            Supported types are: MCLK, VANA, VDIG, VIO, VAF, RESET, STANDBY -->
++        <configType>RESET</configType>
++        <!--Configuration value for the type of configuration -->
++        <configValue>0</configValue>
++        <!--Delay in milli seconds -->
++        <delayMs>1</delayMs>
++      </powerSetting>
++      <!--Power setting configuration
++          Contains: configType, configValue and delay in milli seconds -->
++      <powerSetting>
++        <!--Power configuration type
++            Supported types are: MCLK, VANA, VDIG, VIO, VAF, RESET, STANDBY -->
++        <configType>VIO</configType>
++        <!--Configuration value for the type of configuration -->
++        <configValue>0</configValue>
++        <!--Delay in milli seconds -->
++        <delayMs>1</delayMs>
++      </powerSetting>
++    </powerDownSequence>
++  </slaveInfo>
++  <!--Addresses for various sensor registers -->
++  <regAddrInfo>
++    <!--Register address to program width -->
++    <xOutput>0</xOutput>
++    <!--Register address to program height -->
++    <yOutput>0</yOutput>
++    <!--Register address to program Frame length lines -->
++    <frameLengthLines>0x07</frameLengthLines>
++    <!--Register address to program Line length pixel clock -->
++    <lineLengthPixelClock>0x06</lineLengthPixelClock>
++    <!--Register address to program coarse integration time -->
++    <coarseIntgTimeAddr>0x0B</coarseIntgTimeAddr>
++    <!--Register address to program short coarse integration time
++        This address is optional and must be provided if supported by sensor -->
++    <shortCoarseIntgTimeAddr>0x0C</shortCoarseIntgTimeAddr>
++    <!--Register address to program global gain channel -->
++    <globalGainAddr>0x0D</globalGainAddr>
++    <!--Register address to program short global gain channel
++        This address is optional and must be provided if supported by sensor -->
++    <shortGlobalGainAddr>0</shortGlobalGainAddr>
++    <!--Register address to program digital gloabl gain channel
++        This address is optional and must be provided if supported by sensor -->
++    <digitalGlobalGainAddr>0</digitalGlobalGainAddr>
++    <!--Register address to program manual test pattern value for Red channel -->
++    <testPatternRAddr>0</testPatternRAddr>
++    <!--Register address to program manual test pattern value for Green Red channel -->
++    <testPatternGRAddr>0</testPatternGRAddr>
++    <!--Register address to program manual test pattern value for Blue channel -->
++    <testPatternBAddr>0</testPatternBAddr>
++    <!--Register address to program manual test pattern value for Green Blue channel -->
++    <testPatternGBAddr>0</testPatternGBAddr>
++  </regAddrInfo>
++  <!--Information of all the resolutions
++      Number of resolutions is detected from number of resolutionData nodes -->
++  <resolutionInfo>
++    <!--Specify which sensor version can support this setting-->
++    <sensorVersion>0</sensorVersion>
++    <resolutionData>
++      <!-- Mode Dev-1 1920x1080 @30 fps -->
++      <!--According to an email from 6th march 2023 TC/QC we should use BAYER_GBRG instead of BAYER_Y-->
++      <colorFilterArrangement>BAYER_Y</colorFilterArrangement>
++      <streamInfo>
++        <streamConfiguration>
++          <!--So far we have only one image channel. Therefore virtual channel is 0.-->
++          <vc range="[0,3]">0</vc>
++          <dt>42</dt>
++          <frameDimension>
++            <xStart>0</xStart>
++            <yStart>0</yStart>
++            <width>1920</width>
++            <height>1080</height>
++          </frameDimension>
++          <bitWidth>8</bitWidth>
++          <type>IMAGE</type>
++        </streamConfiguration>
++      </streamInfo>
++      <!--See Register configuration in Excel-->
++      <!--lineLengthPixelClock>1260</lineLengthPixelClock-->
++      <!--lineLengthPixelClock>630</lineLengthPixelClock-->
++       <lineLengthPixelClock>425</lineLengthPixelClock>
++      <!-- Frame Period for Video mode-->
++      <!--frameLengthLines>3918</frameLengthLines-->
++      <frameLengthLines>3918</frameLengthLines>
++      <!--No Information found in imager specification-->
++      <minHorizontalBlanking>0</minHorizontalBlanking>
++      <!--No Information found in imager specification-->
++      <minVerticalBlanking>0</minVerticalBlanking>
++      <outputPixelClock>300000000</outputPixelClock>
++      <horizontalBinning>1</horizontalBinning>
++      <verticalBinning>1</verticalBinning>
++      <frameRate>30.00</frameRate>
++      <laneCount>2</laneCount>
++      <!--The value is a ratio, and the sensors are able only to downscale.
++          It must be 1.00 or greater at all times.-->
++      <downScaleFactor>1.0</downScaleFactor>
++      <!--Settle time in nano seconds -->
++      <settleTimeNs>13</settleTimeNs>
++      <!--Imager is DPYH(1Phase) not CPHY(3Phase)-->
++      <is3Phase>0</is3Phase>
++      <!--Intergation related information for each resolution-->
++      <integrationInfo>
++        <!--Minimum intergation time-->
++        <integrationTimeMin>0</integrationTimeMin>
++        <!--The step of intergation time-->
++        <integrationTimeStep>0</integrationTimeStep>
++        <!--Integration time margin-->
++        <integrationTimeMargin>0</integrationTimeMargin>
++      </integrationInfo>
++      <!--Sequence of register settings to configure the device -->
++      <resSettings>
++        <!--Register setting configuration
++            Contains: register address, register data, register address type, register data type,
++            operation and delay in micro seconds -->
++        <regSetting>
++          <registerAddr>0x02</registerAddr>
++          <registerData>0x0001</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        <regSetting>
++          <registerAddr>0x30</registerAddr>
++          <registerData>0x0001</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        <regSetting>
++          <registerAddr>0x30</registerAddr>
++          <registerData>0x0000</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++      <!--Open video mode-->
++      <regSetting>
++        <registerAddr>0x03</registerAddr>
++        <registerData>0x002F</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++        <!--30FPS-->
++        <regSetting>
++          <registerAddr>0x06</registerAddr>
++          <registerData>0x01a9</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        <regSetting>
++          <registerAddr>0x07</registerAddr>
++          <registerData>0x0F4E</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++
++        <!--regSetting>
++          <registerAddr>0x0a</registerAddr>
++          <registerData>0x781F</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++
++        <regSetting>
++          <registerAddr>0x30</registerAddr>
++          <registerData>0x000D</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting-->
++        <!--test pattern-->
++        <!--
++        <regSetting>
++          <registerAddr>0x04</registerAddr>
++          <registerData>0x0002</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        -->
++
++	      <regSetting>
++	        <registerAddr>0x02</registerAddr>
++	        <registerData>0x0004</registerData>
++	        <regAddrType range="[1,4]">1</regAddrType>
++	        <regDataType range="[1,4]">2</regDataType>
++	        <operation>WRITE</operation>
++	      </regSetting>
++       </resSettings>
++      <cropInfo>
++        <left>0</left>
++        <right>0</right>
++        <top>0</top>
++        <bottom>0</bottom>
++      </cropInfo>
++      <capability>NORMAL</capability>
++    </resolutionData>
++    <resolutionData>
++      <!-- Mode Dev-1 1920x1080 @60 fps -->
++      <!--According to an email from 6th march 2023 TC/QC we should use BAYER_GBRG instead of BAYER_Y-->
++      <colorFilterArrangement>BAYER_Y</colorFilterArrangement>
++      <streamInfo>
++        <streamConfiguration>
++          <!--So far we have only one image channel. Therefore virtual channel is 0.-->
++          <vc range="[0,3]">0</vc>
++          <dt>43</dt>
++          <frameDimension>
++            <xStart>0</xStart>
++            <yStart>0</yStart>
++            <width>1920</width>
++            <height>1080</height>
++          </frameDimension>
++          <bitWidth>10</bitWidth>
++          <type>IMAGE</type>
++        </streamConfiguration>
++      </streamInfo>
++      <!--See Register configuration in Excel-->
++       <lineLengthPixelClock>650</lineLengthPixelClock>
++      <!-- Frame Period for Video mode-->
++      <frameLengthLines>1282</frameLengthLines>
++      <!--No Information found in imager specification-->
++      <minHorizontalBlanking>0</minHorizontalBlanking>
++      <!--No Information found in imager specification-->
++      <minVerticalBlanking>0</minVerticalBlanking>
++      <outputPixelClock>300000000</outputPixelClock>
++      <horizontalBinning>1</horizontalBinning>
++      <verticalBinning>1</verticalBinning>
++      <frameRate>60.00</frameRate>
++      <laneCount>2</laneCount>
++      <!--The value is a ratio, and the sensors are able only to downscale.
++          It must be 1.00 or greater at all times.-->
++      <downScaleFactor>1.0</downScaleFactor>
++      <!--Settle time in nano seconds -->
++      <settleTimeNs>13</settleTimeNs>
++      <!--Imager is DPYH(1Phase) not CPHY(3Phase)-->
++      <is3Phase>0</is3Phase>
++      <!--Intergation related information for each resolution-->
++      <integrationInfo>
++        <!--Minimum intergation time-->
++        <integrationTimeMin>0</integrationTimeMin>
++        <!--The step of intergation time-->
++        <integrationTimeStep>0</integrationTimeStep>
++        <!--Integration time margin-->
++        <integrationTimeMargin>0</integrationTimeMargin>
++      </integrationInfo>
++      <!--Sequence of register settings to configure the device -->
++      <resSettings>
++        <!--Register setting configuration
++            Contains: register address, register data, register address type, register data type,
++            operation and delay in micro seconds -->
++        <regSetting>
++          <registerAddr>0x02</registerAddr>
++          <registerData>0x0001</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        <regSetting>
++          <registerAddr>0x30</registerAddr>
++          <registerData>0x0001</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        <regSetting>
++          <registerAddr>0x30</registerAddr>
++          <registerData>0x0000</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++      <!--Open video mode-->
++      <regSetting>
++        <registerAddr>0x03</registerAddr>
++        <!--For 25Mhz-->
++        <!--registerData>0x002D</registerData-->
++        <!--For 50Mhz-->
++        <registerData>0x002F</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++        <!--60FPS-->
++        <regSetting>
++          <registerAddr>0x06</registerAddr>
++          <registerData>0x028A</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        <regSetting>
++          <registerAddr>0x07</registerAddr>
++          <registerData>0x0502</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        <!--debugadd set mipi to 100Mhz-->
++        <!--regSetting>
++          <registerAddr>0x0a</registerAddr>
++          <registerData>0x781F</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting-->
++
++        <regSetting>
++          <registerAddr>0x0a</registerAddr>
++          <registerData>0x191f</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++
++        <!--regSetting>
++          <registerAddr>0x0a</registerAddr>
++          <registerData>0x781F</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++
++        <regSetting>
++          <registerAddr>0x30</registerAddr>
++          <registerData>0x000D</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting-->
++        <!--test pattern-->
++        <!--
++        <regSetting>
++          <registerAddr>0x04</registerAddr>
++          <registerData>0x0002</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0x0</delayUs>
++        </regSetting>
++        -->
++	      <regSetting>
++	        <registerAddr>0x02</registerAddr>
++	        <registerData>0x0004</registerData>
++	        <regAddrType range="[1,4]">1</regAddrType>
++	        <regDataType range="[1,4]">2</regDataType>
++	        <operation>WRITE</operation>
++	      </regSetting>
++       </resSettings>
++      <cropInfo>
++        <left>0</left>
++        <right>0</right>
++        <top>0</top>
++        <bottom>0</bottom>
++      </cropInfo>
++      <capability>NORMAL</capability>
++    </resolutionData>
++  </resolutionInfo>
++  <!--Exposure control information -->
++  <exposureControlInfo>
++    <maxAnalogGain>16</maxAnalogGain>
++    <maxDigitalGain>16</maxDigitalGain>
++    <verticalOffset>10</verticalOffset>
++    <maxLineCount>65525</maxLineCount>
++    <!--Conversion factor to convert real digital gain to register digital gain -->
++    <realToRegDigitalGainConversionFactor>256</realToRegDigitalGainConversionFactor>
++    <realToRegGain></realToRegGain>
++    <regToRealGain></regToRealGain>
++  </exposureControlInfo>
++
++  <!--Sequence of register settings to configure the device -->
++  <streamOnSettings>
++    <regSetting>
++      <registerAddr>0x02</registerAddr>
++      <registerData>0x0008</registerData>
++      <regAddrType range="[1,4]">1</regAddrType>
++      <regDataType range="[1,4]">2</regDataType>
++      <operation>WRITE</operation>
++      <delayUs>0</delayUs>
++    </regSetting>
++  </streamOnSettings>
++  <streamOffSettings>
++    <regSetting>
++      <registerAddr>0x02</registerAddr>
++      <registerData>0x0001</registerData>
++      <regAddrType range="[1,4]">1</regAddrType>
++      <regDataType range="[1,4]">2</regDataType>
++      <operation>WRITE</operation>
++      <delayUs>0</delayUs>
++    </regSetting>
++  </streamOffSettings>
++  <groupHoldOnSettings>
++  </groupHoldOnSettings>
++  <groupHoldOffSettings>
++  </groupHoldOffSettings>
++  <slaveSettings>
++
++  </slaveSettings>
++
++  <masterSettings>
++
++  </masterSettings>
++  <!--Sequence of register settings to configure the device -->
++  <initSettings>
++    <!--Specify which sensor version can support this setting-->
++    <sensorVersion>0</sensorVersion>
++    <initSetting>
++      <!--Register setting configuration
++          Contains: register address, register data, register address type, register data type,
++              operation and delay in micro seconds -->
++      <regSetting>
++        <registerAddr>0x05</registerAddr>
++        <registerData>0x0015</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++       <regSetting>
++        <registerAddr>0x29</registerAddr>
++        <!--registerData>0x0782</registerData-->
++        <registerData>0x0702</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++      <regSetting>
++        <registerAddr>0x2B</registerAddr>
++        <registerData>0x040D</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++
++      <regSetting>
++        <registerAddr>0x2c</registerAddr>
++        <registerData>0x020d</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++
++      <regSetting>
++        <registerAddr>0x2d</registerAddr>
++        <registerData>0x104c</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++
++      <regSetting>
++        <registerAddr>0x80</registerAddr>
++        <registerData>0x3F87</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++      <regSetting>
++        <registerAddr>0x90</registerAddr>
++        <registerData>0x4EAF</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++      <regSetting>
++        <registerAddr>0x91</registerAddr>
++        <registerData>0x0001</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++      <regSetting>
++        <registerAddr>0x95</registerAddr>
++        <registerData>0x1728</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++      <regSetting>
++        <registerAddr>0x9C</registerAddr>
++        <registerData>0x0A3E</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++      <regSetting>
++        <registerAddr>0xA3</registerAddr>
++        <registerData>0x0186</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0552 0xd550 0xf551 0xf551 0xf551 0xf551 0xf551 0xf551</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0008</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0xf551 0xf551 0xf551 0xf551 0xf551 0x8551 0xf550 0x4550</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0010</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0xf552 0xe552 0x153a 0xf532 0x5532 0xa552 0xf152 0xf152</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0018</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x7152 0x9156 0xf114 0xf114 0xf114 0xf114 0xf114 0xf114</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0020</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0xf114 0x2114 0xf110 0xf110 0xf110 0xb110 0xf510 0x8510</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0028</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x9550 0x4552 0x9512 0xf532 0xd532 0xf53a 0xf53a 0xf53a</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0030</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0xf53a 0xf53a 0xf53a 0xf53a 0xf53a 0xf53a 0x553a 0x142a</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0038</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x202a 0xf02e 0xa02e 0x802c 0x300c 0x404c 0xf34c 0xf34c</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0040</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x734c 0x014c 0x304c 0x9044 0xf045 0xf045 0x5045 0x6044</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0048</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0xe04c 0xf14c 0xf14c 0x714c 0x100c 0x380c 0x582c 0x202c</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0050</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x002c 0x8028 0xb02a 0x742a 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0058</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0060</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0068</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0070</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0078</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0080</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0012 0x000d 0x0018 0x0019 0x0004 0x0000 0x002a 0x0012</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0088</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0037 0x0050 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <!--Set Offset for I2C Burst-->
++      <regSetting>
++        <registerAddr>0x4F</registerAddr>
++        <registerData>0x0090</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++      </regSetting>
++      <!--8 Word RAM BURST-->
++      <regSetting>
++        <registerAddr>0x50</registerAddr>
++        <registerData>0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE_BURST</operation>
++      </regSetting>
++      <regSetting>
++        <registerAddr>0x0B</registerAddr>
++        <registerData>0x000f</registerData>
++        <regAddrType range="[1,4]">1</regAddrType>
++        <regDataType range="[1,4]">2</regDataType>
++        <operation>WRITE</operation>
++        <delayUs>0x0</delayUs>
++      </regSetting>
++    </initSetting>
++  </initSettings>
++  <testPatternInfo>
++    <testPatternData>
++      <mode>OFF</mode>
++      <settings>
++        <regSetting>
++          <registerAddr>0x04</registerAddr>
++          <registerData>0xA052</registerData>
++          <regAddrType range="[1,4]">1</regAddrType>
++          <regDataType range="[1,4]">2</regDataType>
++          <operation>WRITE</operation>
++          <delayUs>0</delayUs>
++        </regSetting>
++      </settings>
++    </testPatternData>
++  </testPatternInfo>
++  <colorLevelInfo>
++    <!--White level value -->
++    <whiteLevel>255</whiteLevel>
++    <!--Pedestal value for Red channel -->
++    <rPedestal>64</rPedestal>
++    <!--Pedestal value for GreenRed channel -->
++    <grPedestal>64</grPedestal>
++    <!--Pedestal value for Blue channel -->
++    <bPedestal>64</bPedestal>
++    <!--Pedestal value for Green Blue channel -->
++    <gbPedestal>64</gbPedestal>
++  </colorLevelInfo>
++  <opticalBlackRegionInfo>
++    <!--Frame dimension: contains xStart, yStart, width and height -->
++    <dimension>
++      <xStart>0</xStart>
++      <yStart>0</yStart>
++      <width>0</width>
++      <height>0</height>
++    </dimension>
++  </opticalBlackRegionInfo>
++  <!--Information about the pixel array
++      Active dimension and dummy pixels width are provided -->
++  <pixelArrayInfo>
++    <!--Width and height of the frame or subframe -->
++    <activeDimension>
++      <width>1920</width>
++      <height>1080</height>
++    </activeDimension>
++    <dummyInfo>
++      <left>0</left>
++      <right>0</right>
++      <top>0</top>
++      <bottom>0</bottom>
++    </dummyInfo>
++  </pixelArrayInfo>
++  <!--Application delay information -->
++  <delayInfo>
++    <!--Number of frames required to apply the linecount -->
++    <linecount>2</linecount>
++    <!--Number of frames required to apply the gain -->
++    <gain>0</gain>
++    <!--Maximum pipeline delay in number of frames -->
++    <maxPipeline>2</maxPipeline>
++    <frameSkip>1</frameSkip>
++  </delayInfo>
++  <sensorProperty>
++    <pixelSize>2.5</pixelSize>
++    <!--Crop factor -->
++    <cropFactor>1.0</cropFactor>
++    <!--Sensing method of senosor
++        Supported sensing methods: UNDEFINED, ONE_CHIP_COLOR_AREA, TWO_CHIP_COLOR_AREA
++        THREE_CHIP_COLOR_AREA, COLOR_SEQUENCE_AREA, TRILINEAR, COLOR_SEQUENCE_LINEAR -->
++    <sensingMethod>ONE_CHIP_COLOR_AREA</sensingMethod>
++    <ADCReadoutTime>8.5</ADCReadoutTime>
++  </sensorProperty>
++  <!--noiseCoefficent>
++    <gradient_S>3.738032e-06</gradient_S>
++    <offset_S>3.651935e-04</offset_S>
++    <gradient_O>4.499952e-07</gradient_O>
++    <offset_O>-2.968624e-04</offset_O>
++  </noiseCoefficent-->
++</sensorDriverData>
+diff --git a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/tools/buildbins/buildbins_kona.yaml b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/tools/buildbins/buildbins_kona.yaml
+index 9769ba81..8a4b8ca6 100755
+--- a/apps_proc/src/vendor/qcom/proprietary/chi-cdk/tools/buildbins/buildbins_kona.yaml
++++ b/apps_proc/src/vendor/qcom/proprietary/chi-cdk/tools/buildbins/buildbins_kona.yaml
+@@ -180,6 +180,10 @@ sensor_drivers:
+     - sensor/s5kgd2sp03/s5kgd2sp03_sensor.xml
+     - module/tsprecision_s5kgd2sp03_module5.xml
+     - eeprom/gd2_brcg064gwz_3_eeprom.xml
++    
++- com.qti.sensormodule.e2vTopaz2M:
++    - sensor/e2vTopaz2M/e2vTopaz2M_sensor.xml
++    - module/e2vTopaz2M_module.xml
+ 
+ facedetection_binaries:
+ - fdconfigvideo:
+-- 
+2.17.1
+
