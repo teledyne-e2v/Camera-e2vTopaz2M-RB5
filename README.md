@@ -48,4 +48,49 @@ repo init -u ssh://romain.guiguet@teledyne.com@partner.thundercomm.com:9418/mani
 ```
 repo sync -cd --no-tags -j4
 ```
-## Start SDK manager 
+
+## Copy the patch and apply it
+
+### Copy Patch to docker (from outside the docker)
+Find the docker id:
+```
+sudo docker ps
+```
+
+terminal render:
+```
+CONTAINER ID   IMAGE                                                                COMMAND       CREATED       STATUS       PORTS     NAMES
+8d9de487cb01   public.ecr.aws/k5o4b3u5/thundercomm/turbox-sdkmanager-20.04:v1.2.2   "/bin/bash"   5 hours ago   Up 5 hours             turbox-sdkmanager-20.04_v1.2.2_1000
+```
+copy the patch file using docker ID:
+```
+sudo docker cp Patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/proprietary/.
+```
+
+### Apply Patch (in the docker)
+Find the patch in the Docker:
+```
+cd  /home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/proprietary/
+```
+Apply the patch:
+```
+git apply Patch/0001-Camera-e2vTopaz2M-bring-up.patch --whitespace=nowarn
+```
+
+## Build the image 
+In the docker:
+```
+cd /home/turbox
+```
+Start the build:
+```
+./turbox_build.sh -alv debug
+```
+Create the image:
+```
+./turbox_build.sh -ul
+```
+```
+./turbox_build.sh --zip_flat_build -l
+```
+
