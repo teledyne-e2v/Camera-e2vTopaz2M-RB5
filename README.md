@@ -27,6 +27,11 @@ Open SDK-Manager with OS-version 20.04 via the following command
 ```
 /usr/bin/turbox-sdkmanager-setup.sh --os-version 20.04
 ```
+Setup your git login
+```
+git config --global user.name "romain.guiguet@teledyne.com"
+git config --global user.email "romain.guiguet@teledyne.com"
+```
 Create the ssh Key (inside the docker)
 ```
 ssh-keygen -t rsa -C "romain.guiguet@teledyne.com"
@@ -43,3 +48,4 @@ repo init -u ssh://romain.guiguet@teledyne.com@partner.thundercomm.com:9418/mani
 ```
 repo sync -cd --no-tags -j4
 ```
+## Start SDK manager 
