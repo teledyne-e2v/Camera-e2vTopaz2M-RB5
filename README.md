@@ -66,7 +66,13 @@ copy the patch file using docker ID:
 ```
 sudo docker cp Patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/proprietary/.
 ```
-
+Copy recipe corrections:
+```
+sudo docker cp python3-ubuntu.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-ubuntu/recipes-toolchain/ubuntu/.
+```
+```
+sudo docker cp ptool-native_git.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-bsp/recipes-devtools/ptool/.
+```
 ### Apply Patch (in the docker)
 Find the patch in the Docker:
 ```
