@@ -114,3 +114,33 @@ You’ll see 2 variants: “RB5” and “RB5N”. The correct one to choose for
 ```
 sudo docker cp 8d9de487cb01:/home/turbox/turbox/output/FlatBuild_Turbox-RB5_xx.xx_lu2.0.l.userdebug.20240923.191846_RB5.zip .
 ```
+
+## Flash the image
+Copy the ZIP file in Windows PC and extract it.
+
+
+Enter 9008 Emergency Download (EDL) mode with F_DL key.
+Follow these steps to force the device to enter 9008 (EDL) mode.
+1. Press the F_DL key and hold.
+2. Connect the device to the host machine via USB Type-C cable, wait 2 seconds and release the F_DL key.
+3. Connect the device to a 12 V Power supply.
+
+adb command enter 9008 (EDL) mode.
+```
+adb root
+adb reboot edl
+```
+
+Open QFIL (https://qfiltool.com/) and follow these steps
+1. SelectPort: Ensure that the 9008 port is found.
+2. Select Flat build, click Browser… to select programmer in the image folder: ```prog_firehose_ddr.elf```
+3. Click Load XML:
+
+    a. select the following rawprogramxx.xml and click Open
+![image](https://github.com/user-attachments/assets/0c197e88-2b65-41a2-8e3b-0d1646a5b0f1)
+
+     b. select all patchxx.xml and click Open
+![image](https://github.com/user-attachments/assets/721adab8-bb8c-4430-94db-c1f9f272705d)
+
+6. Select ***ufs*** device type configuration.
+7. Click on Dowload 
