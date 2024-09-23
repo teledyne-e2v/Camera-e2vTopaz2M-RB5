@@ -110,3 +110,7 @@ Create the image:
 ```
 Flat image is then found  in ```turbox/output``` folder
 You’ll see 2 variants: “RB5” and “RB5N”. The correct one to choose for your project is “RB5” (without ‘N’)
+
+```
+sudo docker cp 8d9de487cb01:/home/turbox/turbox/output/FlatBuild_Turbox-RB5_xx.xx_lu2.0.l.userdebug.20240923.191846_RB5.zip .
+```
