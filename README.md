@@ -108,4 +108,5 @@ Create the image:
 ```
 ./turbox_build.sh --zip_flat_build -l
 ```
-
+Flat image is then found  in ```turbox/output``` folder
+You’ll see 2 variants: “RB5” and “RB5N”. The correct one to choose for your project is “RB5” (without ‘N’)
