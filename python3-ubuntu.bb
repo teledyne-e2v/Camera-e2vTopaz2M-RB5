@@ -25,8 +25,8 @@ SRC_URI[libpython3.8-dev.md5sum] = "8a620c70f651479f7097b4946d1f25c6"
 SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/main/p/python3.8/libpython3.8-minimal_3.8.2-1ubuntu1_arm64.deb;name=libpython3.8-minimal"
 SRC_URI[libpython3.8-minimal.md5sum] = "d4eff1767a354b1e192a7265f86918cc"
 
-SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/universe/p/python3.8/libpython3.8-testsuite_3.8.10-0ubuntu1~20.04.11_all.deb;name=libpython3.8-testsuite"
-SRC_URI[libpython3.8-testsuite.md5sum] = "ce841aadf974207483aad0f1ba907f90"
+SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/universe/p/python3.8/libpython3.8-testsuite_3.8.10-0ubuntu1~20.04.12_all.deb;name=libpython3.8-testsuite"
+SRC_URI[libpython3.8-testsuite.sha256sum] = "3a5373187e1addfc48169b0d930703fff7f6e9885ee3a6ea9af07a9cec6168b3"
 
 SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/main/p/python3.8/python3.8-dev_3.8.2-1ubuntu1_arm64.deb;name=python3.8-dev"
 SRC_URI[python3.8-dev.md5sum] = "4ac92fb8a6b942d1c795ab80ef8a8db9"
@@ -37,8 +37,8 @@ SRC_URI[libpython3.8-stdlib.md5sum] = "663a4a5f8c1fc19684da2512c70b8c41"
 SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/main/p/python3.8/python3.8-minimal_3.8.2-1ubuntu1_arm64.deb;name=python3.8-minimal"
 SRC_URI[python3.8-minimal.md5sum] = "be8239e6243369ac02468408768debf5"
 
-SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/universe/p/python3.8/python3.8-full_3.8.10-0ubuntu1~20.04.11_arm64.deb;name=python3.8-full"
-SRC_URI[python3.8-full.md5sum] = "6b14a34bd688277c683f4851bd6397b4"
+SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/universe/p/python3.8/python3.8-full_3.8.10-0ubuntu1~20.04.12_arm64.deb;name=python3.8-full"
+SRC_URI[python3.8-full.sha256sum] = "ae994c0475ae2a6ccd910088e56df4d6f37514296c1a1bc36b09af101bad0b3c"
 
 SRC_URI += "http://ports.ubuntu.com/ubuntu-ports/pool/universe/p/python3.8/python3.8-venv_3.8.2-1ubuntu1_arm64.deb;name=python3.8-venv"
 SRC_URI[python3.8-venv.md5sum] = "5bd74a5e05f011f3a233b7d5350f5135"
