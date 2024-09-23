@@ -92,6 +92,15 @@ Start the build:
 ```
 ./turbox_build.sh -alv debug
 ```
+Note that is you have a recipe error like ```python3-ubuntu.bb``` you have to check the version following the URL.
+If you need to modify the version, the checksum will vary also: please run the build agin to get the new value.
+After any change in the recipe, to take it into account that is require to remove the following file before running the build script:
+```
+cd lu.um.3.3.1/apps_proc/
+rm -rf build-qti-distro-ubuntu-fullstack-debug
+```
+
+
 Create the image:
 ```
 ./turbox_build.sh -ul
