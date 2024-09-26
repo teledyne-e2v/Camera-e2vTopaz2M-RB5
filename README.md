@@ -103,6 +103,7 @@ rm -rf build-qti-distro-ubuntu-fullstack-debug
 
 Create the image:
 ```
+cd /home/turbox
 ./turbox_build.sh -ul
 ```
 ```
@@ -143,4 +144,32 @@ Open QFIL (https://qfiltool.com/) and follow these steps
 ![image](https://github.com/user-attachments/assets/721adab8-bb8c-4430-94db-c1f9f272705d)
 
 6. Select ***ufs*** device type configuration.
-7. Click on Dowload 
+7. Click on Dowload
+
+## Test the driver
+
+### Preview over TCP forwarding
+
+From the PC connecet on USB-C to the platform:
+
+Terminal window 1:
+```
+adb root && adb remount && adb shell mount -o remount,rw /
+adb shell
+```
+start video the pipeline
+```
+gst-launch-1.0 -e qtiqmmfsrc camera=0 ! video/x-raw\(memory:GBM\),format=NV12,width=1920,height=1080,framerate=60/1 ! qtic2venc ! h264parse ! queue ! h264parse config-interval=-1 ! mpegtsmux name=muxer ! queue ! tcpserversink port=8900 host=127.0.0.1
+```
+
+Terminal window 2:
+```
+adb forward tcp:8900 tcp:8900
+vlc -vvv tcp://127.0.0.1:8900
+```
+
+### Preview from the platform connected to HDMI screen
+
+```
+export XDG_RUNTIME_DIR=/run/user/root && gst-launch-1.0 qtiqmmfsrc camera=0 !video/x-raw\(memory:GBM\), format=NV12,width=1920,height=1080, framerate=60/1 ! waylandsink fullscreen=true async=true sync=false
+```
