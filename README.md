@@ -49,39 +49,61 @@ repo init -u ssh://romain.guiguet@teledyne.com@partner.thundercomm.com:9418/mani
 repo sync -cd --no-tags -j4
 ```
 
-## Copy the patch and apply it
+## Copy the patches and apply them
+Open two terminals:
+- [DOCKER]: terminal where the sdk manager has been started in the previous step
+- [DRIVER]: treminal where this repository has been clone, containing the divers files and patches
+Please follow the next steps in the correct order to apply properly the different patches
 
-### Copy Patch to docker (from outside the docker)
-Find the docker id:
+That is also require to note the CONTAINER ID that will be used in next steps to copy the patche files to docker:
+[DRIVER]:
 ```
 sudo docker ps
 ```
-
 terminal render:
 ```
 CONTAINER ID   IMAGE                                                                COMMAND       CREATED       STATUS       PORTS     NAMES
 8d9de487cb01   public.ecr.aws/k5o4b3u5/thundercomm/turbox-sdkmanager-20.04:v1.2.2   "/bin/bash"   5 hours ago   Up 5 hours             turbox-sdkmanager-20.04_v1.2.2_1000
 ```
-copy the patch file using docker ID:
-```
-sudo docker cp Patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/proprietary/.
-```
-Copy recipe corrections:
+The container ID here is 8d9de487cb01, please replace it in all the next commands by your own ID.
+
+### Recipe correction
+This correction has to be applied manually by copying the following files:
+
+[DRIVER]:
 ```
 sudo docker cp python3-ubuntu.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-ubuntu/recipes-toolchain/ubuntu/.
 ```
+[DRIVER]:
 ```
 sudo docker cp ptool-native_git.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-bsp/recipes-devtools/ptool/.
 ```
-### Apply Patch (in the docker)
-Find the patch in the Docker:
+
+### Base driver :
+[DRIVER]:
+```
+sudo docker cp Patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/proprietary/.
+```
+[DOCKER]:
 ```
 cd  /home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/proprietary/
-```
-Apply the patch:
-```
 git apply Patch/0001-Camera-e2vTopaz2M-bring-up.patch --whitespace=nowarn
 ```
+### Control driver :
+[DRIVER]:
+```
+sudo docker cp control/0001-Camera_Teledyne2-Add-device-node-e2vTopaz.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
+sudo docker cp control/0002-Camera_Teledyne2-Skip-sof-freeze.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
+sudo docker cp control/0003-Camera_Teledyne2-Add-read-func-for-e2vTopaz.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
+```
+[DOCKER]:
+```
+cd  /home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera
+git apply 0001-Camera_Teledyne2-Add-device-node-e2vTopaz.patch --whitespace=nowarn
+git apply 0002-Camera_Teledyne2-Skip-sof-freeze.patch --whitespace=nowarn
+git apply 0003-Camera_Teledyne2-Add-read-func-for-e2vTopaz.patch --whitespace=nowarn
+```
+
 
 ## Build the image 
 In the docker:
