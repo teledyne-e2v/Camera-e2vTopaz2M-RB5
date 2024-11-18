@@ -72,11 +72,11 @@ This correction has to be applied manually by copying the following files:
 
 [DRIVER]:
 ```
-sudo docker cp python3-ubuntu.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-ubuntu/recipes-toolchain/ubuntu/.
+sudo docker cp recipe/python3-ubuntu.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-ubuntu/recipes-toolchain/ubuntu/.
 ```
 [DRIVER]:
 ```
-sudo docker cp ptool-native_git.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-bsp/recipes-devtools/ptool/.
+sudo docker cp recipe/ptool-native_git.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-bsp/recipes-devtools/ptool/.
 ```
 
 ### Base driver :
@@ -103,7 +103,22 @@ git apply 0001-Camera_Teledyne2-Add-device-node-e2vTopaz.patch --whitespace=nowa
 git apply 0002-Camera_Teledyne2-Skip-sof-freeze.patch --whitespace=nowarn
 git apply 0003-Camera_Teledyne2-Add-read-func-for-e2vTopaz.patch --whitespace=nowarn
 ```
-
+### GST example :
+[DRIVER]:
+```
+sudo docker cp gst/0001-GST-add-teledyne-example.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss/.
+```
+[DOCKER]:
+```
+cd  /home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss
+git apply 0001-GST-add-teledyne-example.patch --whitespace=nowarn
+```
+### Library update
+This correction has to be applied manually by copying the following file:
+[DRIVER]:
+```
+sudo docker cp bin/camx_0.1_aarch64.tar.gz 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/prebuilt_HY11/.
+```
 
 ## Build the image 
 In the docker:
