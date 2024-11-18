@@ -73,9 +73,6 @@ This correction has to be applied manually by copying the following files:
 [DRIVER]:
 ```
 sudo docker cp recipe/python3-ubuntu.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-ubuntu/recipes-toolchain/ubuntu/.
-```
-[DRIVER]:
-```
 sudo docker cp recipe/ptool-native_git.bb 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/poky/meta-qti-bsp/recipes-devtools/ptool/.
 ```
 
