@@ -476,9 +476,9 @@ index 00000000..b21c66d1
 +    <!--Register address for sensor Id -->
 +    <sensorIdRegAddr>0x7F</sensorIdRegAddr>
 +    <!--Sensor Id -->
-+    <sensorId>0x8016</sensorId>
++    <sensorId>0x8006</sensorId>
 +    <!--Mask for sensor id. Sensor Id may only be few bits -->
-+    <sensorIdMask>0xFFFF</sensorIdMask>
++    <sensorIdMask>0xF00F</sensorIdMask>
 +    <!--I2C frequency mode of slave
 +        Supported modes are: STANDARD (100 KHz), FAST (400 KHz), FAST_PLUS (1 MHz), CUSTOM (Custom frequency in DTSI) -->
 +    <i2cFrequencyMode>FAST</i2cFrequencyMode>
