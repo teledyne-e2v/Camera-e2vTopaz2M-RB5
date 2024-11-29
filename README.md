@@ -207,3 +207,18 @@ vlc -vvv tcp://127.0.0.1:8900
 ```
 export XDG_RUNTIME_DIR=/run/user/root && gst-launch-1.0 qtiqmmfsrc camera=0 !video/x-raw\(memory:GBM\), format=NV12,width=1920,height=1080, framerate=60/1 ! waylandsink fullscreen=true async=true sync=false
 ```
+
+### Log creation for debug
+
+In case of facing issue, that is possible to generate a log file.
+
+[DRIVER]:
+```
+adb root
+adb remount
+```
+Start collect logs:
+```
+adb logcat -b all > logfile.txt
+```
+Then start reproducing the problem，after reproducing the problem, use Ctrl+C to stop log scraping and provide the log file on this case
