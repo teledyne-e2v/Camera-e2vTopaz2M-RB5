@@ -89,18 +89,15 @@ git apply Patch/0001-Camera-e2vTopaz2M-bring-up.patch --whitespace=nowarn
 ### Control driver :
 [DRIVER]:
 ```
-sudo docker cp control/0001-Camera_Teledyne2-Add-device-node-e2vTopaz.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
-sudo docker cp control/0002-Camera_Teledyne2-Skip-sof-freeze.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
-sudo docker cp control/0003-Camera_Teledyne2-Add-read-func-for-e2vTopaz.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
+sudo docker cp control/0001-Camera_Teledyne2-Add-read-func-FULL.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
+
 ```
 [DOCKER]:
 ```
 cd  /home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera
-git apply 0001-Camera_Teledyne2-Add-device-node-e2vTopaz.patch --whitespace=nowarn
-git apply 0002-Camera_Teledyne2-Skip-sof-freeze.patch --whitespace=nowarn
-git apply 0003-Camera_Teledyne2-Add-read-func-for-e2vTopaz.patch --whitespace=nowarn
+git apply 0001-Camera_Teledyne2-Add-read-func-FULL.patch --whitespace=nowarn
 ```
-### GST example :
+### GST control example :
 [DRIVER]:
 ```
 sudo docker cp gst/0001-GST-add-teledyne-example.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss/.
@@ -203,13 +200,17 @@ vlc -vvv tcp://127.0.0.1:8900
 ```
 
 ### Preview from the platform connected to HDMI screen
-
+Here is a GSTREAMER pipeline that can be run to check video stream with `adb shell` command:
 ```
 export XDG_RUNTIME_DIR=/run/user/root && gst-launch-1.0 qtiqmmfsrc camera=0 !video/x-raw\(memory:GBM\), format=NV12,width=1920,height=1080, framerate=60/1 ! waylandsink fullscreen=true async=true sync=false
 ```
 
-### Log creation for debug
+It can be done directly on the RB5:
+```
+gst-launch-1.0 qtiqmmfsrc camera=0 !video/x-raw\(memory:GBM\), format=NV12,width=1920,height=1080, framerate=60/1 ! waylandsink fullscreen=false async=true sync=false
+```
 
+### Log creation for debug
 In case of facing issue, that is possible to generate a log file.
 
 [DRIVER]:
@@ -222,3 +223,58 @@ Start collect logs:
 adb logcat -b all > logfile.txt
 ```
 Then start reproducing the problem，after reproducing the problem, use Ctrl+C to stop log scraping and provide the log file on this case
+
+### Control function check
+This part can be done with `adb shell` function or directly on the RB5.
+
+
+Check the `e2v_node` has been well created in the system:
+```
+cd /sys/devices/platform/soc/ac50000.qcom,cci/ac50000.qcom,cci:qcom,cam-sensor3
+ls -la
+```
+If a gst pipeline is run in parralel, the sensor chip ID can be read with the following command:
+```
+echo "0x7F 0x9999" > e2v_node
+```
+
+The GST control example can also be run if the patch has been applied during the installation:
+```
+gst-camera-teledyne-example
+```
+
+An interactive menu is opened to read and write some registers.
+
+When the pipeline transition to PLAYING state, selected the option "w" to set the address and data of the register.​
+
+Also the option "r" can be selected to set the address of the register to read.
+
+The source code of this function is avalable in this repository `control/tools/gstreamerCtl`
+
+Another function is available here `control/tools/registerCtl`. It can be built and pushed to the platform with the following command:
+```
+aarch64-linux-gnu-gcc -o registerCtl registerCtl.c -lm
+```
+Here are some cammands to test it:
+```
+adb root
+adb remount
+adb push registerCtl /data/
+
+adb shell
+cd /data/
+chmod 777 registerCtl
+
+//write register
+./registerCtl w 0x13 0x0001
+
+//read register
+./registerCtl r 0x13
+```
+
+### Save RAW images
+Here is the pipeline to save RAW images (x3). It can be run with `adb shell`:
+```
+export XDG_RUNTIME_DIR=/run/user/root && gst-launch-1.0 -e qtiqmmfsrc camera=0 ! video/x-bayer,format=\(string\)mono,bpp=\(string\)10,width=1920,height=1080,framerate=60/1 ! queue ! multifilesink location=/data/misc/camera/frame%d.raw sync=true async=false max-files=3
+```
+Images are available here: `/data/misc/camera/`

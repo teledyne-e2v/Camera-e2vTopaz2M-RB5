@@ -1,0 +1,212 @@
+diff --git a/drivers/cam_isp/cam_isp_context.c b/drivers/cam_isp/cam_isp_context.c
+index 6e30af0..e4492d6 100644
+--- a/drivers/cam_isp/cam_isp_context.c
++++ b/drivers/cam_isp/cam_isp_context.c
+@@ -2791,13 +2791,14 @@ end:
+ 			req_msg.u.err_msg.request_id = error_request_id;
+ 			req_msg.u.err_msg.resource_size = 0x0;
+ 
+-			if (cam_req_mgr_notify_message(&req_msg,
+-					V4L_EVENT_CAM_REQ_MGR_ERROR,
+-					V4L_EVENT_CAM_REQ_MGR_EVENT))
+-				CAM_ERR(CAM_ISP,
+-					"Error in notifying the error time for req id:%lld ctx %u",
+-						ctx_isp->last_applied_req_id,
+-						ctx->ctx_id);
++			// if (cam_req_mgr_notify_message(&req_msg,
++			// 		V4L_EVENT_CAM_REQ_MGR_ERROR,
++			// 		V4L_EVENT_CAM_REQ_MGR_EVENT))
++			// 	CAM_ERR(CAM_ISP,
++			// 		"Error in notifying the error time for req id:%lld ctx %u",
++			// 			ctx_isp->last_applied_req_id,
++			// 			ctx->ctx_id);
++			CAM_ERR(CAM_ISP, "addtest skip sof freeze");
+ 		}
+ 		ctx_isp->substate_activated = CAM_ISP_CTX_ACTIVATED_HW_ERROR;
+ 	} else {
+diff --git a/drivers/cam_req_mgr/cam_req_mgr_core.c b/drivers/cam_req_mgr/cam_req_mgr_core.c
+index 59d5763..8c88265 100644
+--- a/drivers/cam_req_mgr/cam_req_mgr_core.c
++++ b/drivers/cam_req_mgr/cam_req_mgr_core.c
+@@ -2217,8 +2217,9 @@ static int __cam_req_mgr_process_sof_freeze(void *priv, void *data)
+ 	msg.u.err_msg.request_id = 0;
+ 	msg.u.err_msg.link_hdl   = link->link_hdl;
+ 
+-	rc = cam_req_mgr_notify_message(&msg,
+-		V4L_EVENT_CAM_REQ_MGR_ERROR, V4L_EVENT_CAM_REQ_MGR_EVENT);
++	// rc = cam_req_mgr_notify_message(&msg,
++	// 	V4L_EVENT_CAM_REQ_MGR_ERROR, V4L_EVENT_CAM_REQ_MGR_EVENT);
++	CAM_ERR(CAM_CRM, "addtest skip notiry sof freeze");
+ 
+ 	if (rc)
+ 		CAM_ERR(CAM_CRM,
+diff --git a/drivers/cam_sensor_module/cam_sensor/cam_sensor_core.c b/drivers/cam_sensor_module/cam_sensor/cam_sensor_core.c
+index c5231ac..ec15bc3 100644
+--- a/drivers/cam_sensor_module/cam_sensor/cam_sensor_core.c
++++ b/drivers/cam_sensor_module/cam_sensor/cam_sensor_core.c
+@@ -16,6 +16,9 @@
+ #include "cam_res_mgr_api.h"
+ #include <soc/qcom/boot_stats.h>
+ 
++//debugadd start
++extern int demo_e2v_init(struct device *dev, struct camera_io_master *master);
++//end
+ 
+ static int cam_sensor_update_req_mgr(
+ 	struct cam_sensor_ctrl_t *s_ctrl,
+@@ -923,6 +926,24 @@ int32_t cam_sensor_driver_cmd(struct cam_sensor_ctrl_t *s_ctrl,
+ 			CAM_ERR(CAM_SENSOR, "power up failed");
+ 			goto free_power_settings;
+ 		}
++
++		// debugadd check sid and slave addr
++               CAM_ERR(CAM_SENSOR,
++                   "debugadd sensor slaveAddress: 0x%X, sensorid: 0x%X, sensorIdMask: 0x%X",
++                   s_ctrl->sensordata->slave_info.sensor_slave_addr,
++                   s_ctrl->sensordata->slave_info.sensor_id,
++                   s_ctrl->sensordata->slave_info.sensor_id_mask);
++       
++               if((s_ctrl->sensordata->slave_info.sensor_id & 0x8006) && (s_ctrl->sensordata->slave_info.sensor_id_mask == 0xF00F)){
++                   CAM_ERR(CAM_SENSOR,
++                       "debugadd the sensor is e2vTopaz2M with slaveAddress: 0x%X, sensorid: 0x%X",
++                       s_ctrl->sensordata->slave_info.sensor_slave_addr,
++                       s_ctrl->sensordata->slave_info.sensor_id);
++       
++                   demo_e2v_init(&s_ctrl->pdev->dev, &s_ctrl->io_master_info);
++               }
++		//end
++
+ 		if (s_ctrl->i2c_data.poweron_reg_settings.is_settings_valid) {
+ 			rc = cam_sensor_apply_settings(s_ctrl, 0,
+ 				CAM_SENSOR_PACKET_OPCODE_SENSOR_POWERON_REG);
+diff --git a/drivers/cam_sensor_module/cam_sensor/cam_sensor_dev.c b/drivers/cam_sensor_module/cam_sensor/cam_sensor_dev.c
+index e347d8d..c5c5dd5 100644
+--- a/drivers/cam_sensor_module/cam_sensor/cam_sensor_dev.c
++++ b/drivers/cam_sensor_module/cam_sensor/cam_sensor_dev.c
+@@ -10,6 +10,126 @@
+ #include "cam_sensor_core.h"
+ #include "camera_main.h"
+ 
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/device.h>
++
++#define SYSFS_NODE_NAME "e2v_node"
++
++static int e2v_node_init = 0;
++struct camera_io_master e2v_master_info = {0};
++
++uint32_t g_e2vTopazAddr;
++
++static ssize_t e2v_node_show(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	int ret = 0;
++	uint32_t reg_addr;
++    uint32_t reg_data;
++
++	if(g_e2vTopazAddr == 0)
++	{
++		CAM_ERR(CAM_SENSOR, "%s: %d, Invalid reg_addr: 0x%02x", __func__, __LINE__, reg_addr);
++		return -EFAULT;
++	}
++
++	reg_addr = 	g_e2vTopazAddr;
++
++	ret = camera_io_dev_read(&e2v_master_info, reg_addr, &reg_data, CAMERA_SENSOR_I2C_TYPE_BYTE, CAMERA_SENSOR_I2C_TYPE_WORD);
++
++	if (ret < 0) {
++		CAM_ERR(CAM_SENSOR, "%s: %d, Failed to read from reg_addr: 0x%02x", __func__, __LINE__, reg_addr);
++		return -EFAULT;
++	}
++	CAM_INFO(CAM_SENSOR, "%s: %d, Read reg_addr: 0x%02x successfully, reg_data: 0x%04x", __func__, __LINE__, reg_addr, reg_data);
++
++    return snprintf(buf, 30, "addr:0x%02x data:0x%04x\n", reg_addr, reg_data);
++}
++
++static ssize_t e2v_node_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
++{
++	int ret = 0;
++	uint32_t reg_addr;
++    uint32_t reg_data;
++
++	struct cam_sensor_i2c_reg_array reg_array = {0};
++	struct cam_sensor_i2c_reg_setting reg_setting = {0};
++
++	CAM_INFO(CAM_SENSOR, "%s: %d, buf from userspace: buf=%s, count=%d", __func__, __LINE__, buf, count);
++
++	sscanf(buf, "0x%x 0x%x", &reg_addr, &reg_data);
++
++	CAM_INFO(CAM_SENSOR, "%s: %d, reg_addr = 0x%02x, reg_data = 0x%04x", __func__, __LINE__, reg_addr, reg_data);
++
++	if (reg_addr == 0)
++	{
++		CAM_ERR(CAM_SENSOR, "%s: %d, Invalid reg_addr: 0x%02x", __func__, __LINE__, reg_addr);
++		return -EFAULT;
++	}
++
++	if(reg_data == 0x9999) {
++		g_e2vTopazAddr = reg_addr;
++		CAM_INFO(CAM_SENSOR, "%s: %d, Call read function: reg_addr = 0x%02x, reg_data = 0x%04x", __func__, __LINE__, reg_addr, reg_data);
++		return count;
++	}
++
++	reg_array = (struct cam_sensor_i2c_reg_array) {
++		.reg_addr = reg_addr,
++		.reg_data = reg_data,
++		.delay = 0,
++		.data_mask = 0,
++	};
++
++	reg_setting = (struct cam_sensor_i2c_reg_setting) {
++		.reg_setting = &reg_array,
++		.size = 1,
++		.addr_type = CAMERA_SENSOR_I2C_TYPE_BYTE,
++		.data_type = CAMERA_SENSOR_I2C_TYPE_WORD,
++		.delay = 0,
++	};
++
++	ret = camera_io_dev_write(&e2v_master_info, &reg_setting);
++	if (ret < 0) {
++		CAM_ERR(CAM_SENSOR, "%s: %d, Failed to write to addr:0x%02x", __func__, __LINE__, reg_addr);
++		return -EFAULT;
++	}
++
++	CAM_INFO(CAM_SENSOR, "%s: %d, Write reg_addr: 0x%02x successfully, reg_data: 0x%04x", __func__, __LINE__, reg_addr, reg_data);
++
++    return count;
++}
++
++static DEVICE_ATTR_RW(e2v_node);
++
++int demo_e2v_init(struct device *dev, struct camera_io_master *master)
++{
++    int ret;
++
++
++	CAM_ERR(CAM_SENSOR, "%s: %d, Enter e2vtopaz device node init", __func__, __LINE__);
++
++	if(e2v_node_init == 1) {
++		pr_info("e2v_node module already initialized\n");
++		return 0;
++	}
++
++
++	memcpy(&e2v_master_info, master, sizeof(struct camera_io_master));
++
++    ret = device_create_file(dev, &dev_attr_e2v_node);
++    if (ret) {
++        return ret;
++    }
++
++    pr_info("e2v_node module initialized\n");
++
++	e2v_node_init = 1;
++    return 0;
++}
++
+ static int cam_sensor_subdev_open(struct v4l2_subdev *sd,
+ 	struct v4l2_subdev_fh *fh)
+ {
