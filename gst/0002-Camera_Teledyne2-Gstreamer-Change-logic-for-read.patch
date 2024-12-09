@@ -1,0 +1,46 @@
+From 68550f5978849c949da3ea83c6096a444a493e93 Mon Sep 17 00:00:00 2001
+From: "yifan.zhou" <yifan.zhou@thundersoft.com>
+Date: Fri, 6 Dec 2024 19:18:32 +0800
+Subject: [PATCH] Camera_Teledyne2: (Gstreamer)Change logic for read and write
+ operation.
+
+Change-Id: I3b6e779faec327eed21a7ce8e99cfda65bda6381
+---
+ gst-plugin-examples/gst-camera-teledyne-example/main.cc | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/gst-plugin-examples/gst-camera-teledyne-example/main.cc b/gst-plugin-examples/gst-camera-teledyne-example/main.cc
+index 065856b..31d1cab 100644
+--- a/gst-plugin-examples/gst-camera-teledyne-example/main.cc
++++ b/gst-plugin-examples/gst-camera-teledyne-example/main.cc
+@@ -65,7 +65,8 @@
+ 
+ 
+ #define E2V_NODE_PATH      "/sys/devices/platform/soc/ac50000.qcom,cci/ac50000.qcom,cci:qcom,cam-sensor3/e2v_node"
+-
++#define E2VTOPAZ_READ_MODE 0
++#define E2VTOPAZ_WRITE_MODE 1
+ 
+ #define ANGORA_LOG_WARNING(fmt, arg...) ALOGW("[%s][%d] " fmt , __FUNCTION__, __LINE__, ##arg)
+ #define ANGORA_LOG_ERROR(fmt, arg...) ALOGE("[%s][%d] " fmt , __FUNCTION__, __LINE__, ##arg)
+@@ -891,7 +892,7 @@ static void writeReg(int fd, int reg_addr, int reg_data)
+ 
+     ANGORA_LOG_INFO("reg_addr: 0x%x, reg_data: 0x%x\n", reg_addr, reg_data);
+ 
+-    sprintf(buf, "0x%02hx 0x%04hx", reg_addr, reg_data);
++    sprintf(buf, "%d 0x%02hx 0x%04hx", E2VTOPAZ_WRITE_MODE, reg_addr, reg_data);
+     ANGORA_LOG_INFO("buf val: %s\n", buf);
+ 
+     ret = write(fd, buf, strlen(buf)+1);
+@@ -904,7 +905,7 @@ static void readReg(int fd, int reg_addr)
+     char read_buf[50] = {0};
+     int ret;
+ 
+-    sprintf(buf, "0x%02hx 0x%04hx", reg_addr, 0x9999);
++    sprintf(buf, "%d 0x%02hx", E2VTOPAZ_READ_MODE, reg_addr);
+ 
+     ret = write(fd, buf, strlen(buf)+1);
+     ANGORA_LOG_INFO("return write: %d\n", ret);
+-- 
+2.7.4
+
