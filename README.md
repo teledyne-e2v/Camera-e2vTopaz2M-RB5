@@ -149,21 +149,16 @@ sudo docker cp 8d9de487cb01:/home/turbox/turbox/output/FlatBuild_Turbox-RB5_xx.x
 
 ## Flash the image
 Copy the ZIP file in Windows PC and extract it.
+Install QPST (https://qpsttool.com/), don't forget the driver inside the archive.
+Download QFIL (https://qfiltool.com/) and extract the archive.
 
+Follow these steps to force the device to enter 9008 (EDL) mode:
+1. Unplug all cables
+2. Press the **F_DL** key and hold it
+3. Connect the device to the host machine via USB Type-C cable, wait 2 seconds and release the F_DL key.
+4. Connect the device to a 12 V Power supply.
 
-Enter 9008 Emergency Download (EDL) mode with F_DL key.
-Follow these steps to force the device to enter 9008 (EDL) mode.
-1. Press the F_DL key and hold.
-2. Connect the device to the host machine via USB Type-C cable, wait 2 seconds and release the F_DL key.
-3. Connect the device to a 12 V Power supply.
-
-adb command enter 9008 (EDL) mode.
-```
-adb root
-adb reboot edl
-```
-
-Open QFIL (https://qfiltool.com/) and follow these steps
+Open QFIL tool:
 1. SelectPort: Ensure that the 9008 port is found.
 2. Select Flat build, click Browser… to select programmer in the image folder: ```prog_firehose_ddr.elf```
 3. Click Load XML:
@@ -174,14 +169,14 @@ Open QFIL (https://qfiltool.com/) and follow these steps
      b. select all patchxx.xml and click Open
 ![image](https://github.com/user-attachments/assets/721adab8-bb8c-4430-94db-c1f9f272705d)
 
-6. Select ***ufs*** device type configuration.
-7. Click on Dowload
+4. Select ***ufs*** device storage type configuration.
+5. Click on Dowload
 
 ## Test the driver
 
 ### Preview over TCP forwarding
 
-From the PC connecet on USB-C to the platform:
+From the PC connected on USB-C to the platform:
 
 Terminal window 1:
 ```
