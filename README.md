@@ -90,7 +90,6 @@ git apply Patch/0001-Camera-e2vTopaz2M-bring-up.patch --whitespace=nowarn
 [DRIVER]:
 ```
 sudo docker cp control/0001-Camera_Teledyne2-Add-read-func-FULL.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
-
 sudo docker cp control/0002-Camera_Teledyne2-Kernel-Change-logic-for-read.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/kernel/msm-5.4/techpack/camera/.
 ```
 [DOCKER]:
@@ -103,7 +102,6 @@ git apply 0002-Camera_Teledyne2-Kernel-Change-logic-for-read.patch --whitespace=
 [DRIVER]:
 ```
 sudo docker cp gst/0001-GST-add-teledyne-example.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss/.
-
 sudo docker cp gst/0002-Camera_Teledyne2-Gstreamer-Change-logic-for-read.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss/.
 ```
 [DOCKER]:
