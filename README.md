@@ -103,12 +103,14 @@ git apply 0002-Camera_Teledyne2-Kernel-Change-logic-for-read.patch --whitespace=
 ```
 sudo docker cp gst/0001-GST-add-teledyne-example.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss/.
 sudo docker cp gst/0002-Camera_Teledyne2-Gstreamer-Change-logic-for-read.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss/.
+sudo docker cp gst/0003-Camera_Teledyne2-Gstreamer-Add-parse-logic-for-read.patch 8d9de487cb01:/home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss/.
 ```
 [DOCKER]:
 ```
 cd  /home/turbox/lu.um.3.3.1/apps_proc/src/vendor/qcom/opensource/gst-plugins-qti-oss
 git apply 0001-GST-add-teledyne-example.patch --whitespace=nowarn
 git apply 0002-Camera_Teledyne2-Gstreamer-Change-logic-for-read.patch --whitespace=nowarn
+git apply 0003-Camera_Teledyne2-Gstreamer-Add-parse-logic-for-read.patch --whitespace=nowarn
 ```
 ### Library update
 This correction has to be applied manually by copying the following file:

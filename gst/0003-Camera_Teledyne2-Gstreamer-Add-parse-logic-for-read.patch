@@ -1,0 +1,46 @@
+From b313bedc026cb6eda606fccbbc9e6d97b66be74f Mon Sep 17 00:00:00 2001
+From: "yifan.zhou" <yifan.zhou@thundersoft.com>
+Date: Tue, 10 Dec 2024 10:02:12 +0800
+Subject: [PATCH] Camera_Teledyne2: (Gstreamer)Add parse logic for read_buf.
+
+Change-Id: I2c96fb5e3124adf19cbf869ec9550983e17ddaa1
+---
+ gst-plugin-examples/gst-camera-teledyne-example/main.cc | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/gst-plugin-examples/gst-camera-teledyne-example/main.cc b/gst-plugin-examples/gst-camera-teledyne-example/main.cc
+index 31d1cab..caa4974 100644
+--- a/gst-plugin-examples/gst-camera-teledyne-example/main.cc
++++ b/gst-plugin-examples/gst-camera-teledyne-example/main.cc
+@@ -904,6 +904,8 @@ static void readReg(int fd, int reg_addr)
+     char buf[50] = {0};
+     char read_buf[50] = {0};
+     int ret;
++    unsigned int read_addr;
++    unsigned int read_data;
+ 
+     sprintf(buf, "%d 0x%02hx", E2VTOPAZ_READ_MODE, reg_addr);
+ 
+@@ -916,8 +918,17 @@ static void readReg(int fd, int reg_addr)
+ 
+     ret = read(fd, read_buf, sizeof(read_buf));
+     //ANGORA_LOG_INFO("return read: %d, buf: %s\n", ret, read_buf);
+-	g_print("\nEnter readReg return read: %d, buf: %s\n", ret, read_buf);
+-	//return read_buf;
++	  g_print("\nEnter readReg return read: %d, buf: %s\n", ret, read_buf);
++
++    if (sscanf(read_buf, "addr:0x%02x data:0x%04x", &read_addr, &read_data) == 2)
++    {
++        g_print("read_addr: 0x%02x\n", read_addr);
++        g_print("read_data: 0x%04x\n", read_data);
++    }
++    else
++    {
++        g_print("Failed to parse the read_buf: %s!", read_buf);
++    }
+ }
+ 
+ static gboolean
+-- 
+2.7.4
+
